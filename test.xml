@@ -1,0 +1,7 @@
+<root>
+	<child_of_root>
+		<child_of_child_of_root>
+			Some text!
+		</child_of_child_of_root>
+	</child_of_root>
+</root>
