@@ -208,6 +208,11 @@ namespace XMLParser
 					m_error_msg = "EOF before tag name.\n";
 					SWITCH_TO(Error)
 				}
+				ANYTHING_ELSE
+				{
+					m_error_msg = "Invalid first character in start-tag name.\n";
+					SWITCH_TO(Error)
+				}
 			}
 			STATE(EndTagOpen)
 			{
@@ -240,6 +245,7 @@ namespace XMLParser
 				CONSUME_CURRENT_CHAR
 				IF_ON_WHITESPACE
 				{
+					emit_current_token();
 					SWITCH_TO(BeforeAttributeName)
 				}
 				IF_ON('/')
@@ -255,7 +261,7 @@ namespace XMLParser
 				// IF_NULL
 				IF_ON_EOF
 				{
-					m_error_msg = "EOF in tag.\n";
+					m_error_msg = "Unexpected EOF in tag name.\n";
 					SWITCH_TO(Error)
 				}
 				ANYTHING_ELSE
@@ -264,15 +270,191 @@ namespace XMLParser
 					SWITCH_TO(TagName)
 				}
 			}
-			STATE(BeforeAttributeName)
+			STATE(SelfClosingStartTag)
 			{
 
+			}
+			
+			STATE(BeforeAttributeName)
+			{
+				CONSUME_CURRENT_CHAR
+				IF_ON_WHITESPACE
+				{
+					SWITCH_TO(BeforeAttributeName)
+				}
+				IF_ON('/')
+				{
+					SWITCH_TO(AfterAttributeName)
+				}
+				IF_ON('>')
+				{
+					SWITCH_TO(AfterAttributeName)
+				}
+				IF_ON_EOF
+				{
+					SWITCH_TO(AfterAttributeName)
+				}
+				IF_ON('=')
+				{
+					m_error_msg = "Unexpected '=' before attribute name.\n";
+					SWITCH_TO(Error)
+				}
+				ANYTHING_ELSE
+				{
+					m_current_token = {};
+					m_current_token.m_type = Token::Type::AttrName;
+					APPEND_CHAR_TO_TOKEN_DATA
+					SWITCH_TO(AttributeName)
+				}
 			}
 			STATE(AttributeName)
 			{
-
+				CONSUME_CURRENT_CHAR
+				IF_ON_WHITESPACE
+				{
+					SWITCH_TO(BeforeAttributeName)
+				}
+				IF_ON('/')
+				{
+					SWITCH_TO(AfterAttributeName)
+				}
+				IF_ON('>')
+				{
+					SWITCH_TO(AfterAttributeName)
+				}
+				IF_ON_EOF
+				{
+					SWITCH_TO(AfterAttributeName)
+				}
+				IF_ON('=')
+				{
+					emit_current_token();
+					SWITCH_TO(AfterAttributeName)
+				}
+				// IF_UPPER_ASCII
+				// IF_NULL
+				IF_ON('"')
+				{
+					m_error_msg = "Unexpected character in attribute name.\n";
+					SWITCH_TO(Error)
+				}
+				IF_ON('/')
+				{
+					m_error_msg = "Unexpected character in attribute name.\n";
+					SWITCH_TO(Error)
+				}
+				IF_ON('<')
+				{
+					m_error_msg = "Unexpected character in attribute name.\n";
+					SWITCH_TO(Error)
+				}
+				ANYTHING_ELSE
+				{
+					APPEND_CHAR_TO_TOKEN_DATA
+					SWITCH_TO(AttributeName)
+				}
+			}
+			STATE(AfterAttributeName)
+			{
+				CONSUME_CURRENT_CHAR
+				IF_ON_WHITESPACE
+				{
+					SWITCH_TO(AfterAttributeName)
+				}
+				IF_ON('/')
+				{
+					SWITCH_TO(SelfClosingStartTag)
+				}
+				// IF_ON('\'')
+				IF_ON('"')
+				{
+					SWITCH_TO(BeforeAttributeValue)
+				}
+				IF_ON('>')
+				{
+					SWITCH_TO(Initial)
+				}
+				IF_ON_EOF
+				{
+					m_error_msg = "Unexpected EOF in attribute name.\n";
+					SWITCH_TO(Error)
+				}
+				ANYTHING_ELSE
+				{
+					m_error_msg = "Attribute name must be followed by '='.\n";
+					SWITCH_TO(Error)
+				}
+			}
+			STATE(BeforeAttributeValue) 
+			{
+				CONSUME_CURRENT_CHAR
+				IF_ON_WHITESPACE
+				{
+					SWITCH_TO(BeforeAttributeValue)
+				}
+				IF_ON('>')
+				{
+					m_error_msg = "Tag closed without end-quote.\n";
+					SWITCH_TO(Error)
+				}
+				// more constraints for illegal chars
+				ANYTHING_ELSE
+				{
+					m_current_token = {};
+					m_current_token.m_type = Token::Type::AttrVal;
+					APPEND_CHAR_TO_TOKEN_DATA
+					SWITCH_TO(AttributeValue)
+				}
+			}
+			STATE(AttributeValue) 
+			{
+				CONSUME_CURRENT_CHAR
+				IF_ON('"')
+				{
+					emit_current_token();
+					SWITCH_TO(AfterAttributeValue)
+				}
+				// IF_NULL
+				IF_ON_EOF
+				{
+					m_error_msg = "Unexpected EOF in attribute value.\n";
+					SWITCH_TO(Error)
+				}
+				ANYTHING_ELSE
+				{
+					APPEND_CHAR_TO_TOKEN_DATA
+					SWITCH_TO(AttributeValue)
+				}
+			}
+			STATE(AfterAttributeValue) 
+			{
+				CONSUME_CURRENT_CHAR
+				IF_ON_WHITESPACE
+				{
+					SWITCH_TO(BeforeAttributeName)
+				}
+				IF_ON('/')
+				{
+					SWITCH_TO(SelfClosingStartTag)
+				}
+				IF_ON('>')
+				{
+					SWITCH_TO(Initial)
+				}
+				IF_ON_EOF
+				{
+					m_error_msg = "Unexpected EOF after attribute value.\n";
+					SWITCH_TO(Error)
+				}
+				ANYTHING_ELSE
+				{
+					m_error_msg = "Missing whitespace between attributes.\n";
+					SWITCH_TO(Error)
+				}
 			}
 
+
+			
 			STATE(Error)
 			{
 				std::cout << "TOKENIZER::" << m_error_msg;

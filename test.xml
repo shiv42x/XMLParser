@@ -1,6 +1,6 @@
-<root>
-	<child_of_root>
-		<child_of_child_of_root>
+<root attribute1="value1">
+	<child_of_root attribute2="value2">
+		<child_of_child_of_root attribute3="value3">
 			Some text!
 		</child_of_child_of_root>
 	</child_of_root>

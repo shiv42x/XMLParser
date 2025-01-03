@@ -23,9 +23,15 @@ namespace XMLParser
 			TagOpen,
 			EndTagOpen,
 			TagName,
+			SelfClosingStartTag,
 
 			BeforeAttributeName,
 			AttributeName,
+			AfterAttributeName,
+
+			BeforeAttributeValue,
+			AttributeValue,
+			AfterAttributeValue,
 			Error
 		};
 
