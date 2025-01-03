@@ -31,7 +31,10 @@
 	while (current_character.has_value() && isspace((char)current_character.value()))	\
 	{																					\
 		current_character = next();														\
-	}																					
+	}		
+
+#define RECONSUME	\
+	m_cursor--;
 
 #define APPEND_CHAR_TO_TOKEN_DATA									\
 	if (current_character.has_value())								\
@@ -115,12 +118,12 @@ namespace XMLParser
 		break;
 		case Token::Type::Character:
 		{
-			std::cout << "Character: ";
+			std::cout << "CHAR: ";
 		}
 		break;
 		case Token::Type::Whitespace:
 		{
-			std::cout << "Whitespace: ";
+			std::cout << "WHITESPACE: ";
 		}
 		break;
 		case Token::Type::EndOfFile:
@@ -129,8 +132,14 @@ namespace XMLParser
 			return;
 		}
 		break;
+		default:
+		{
+			std::cout << "Unknown:";
+		}
 		}
 		std::cout << m_current_token.m_data << std::endl;
+		
+		m_current_token = {};
 	}
 
 	void Tokenizer::create_token(Token::Type type)
@@ -200,7 +209,7 @@ namespace XMLParser
 				{
 					m_current_token = {};
 					m_current_token.m_type = Token::Type::StartTag;
-					APPEND_CHAR_TO_TOKEN_DATA
+					RECONSUME
 					SWITCH_TO(TagName)
 				}
 				IF_ON_EOF
@@ -221,7 +230,7 @@ namespace XMLParser
 				{
 					m_current_token = {};
 					m_current_token.m_type = Token::Type::EndTag;
-					APPEND_CHAR_TO_TOKEN_DATA
+					RECONSUME
 					SWITCH_TO(TagName)
 				}
 				IF_ON('>')
@@ -284,14 +293,17 @@ namespace XMLParser
 				}
 				IF_ON('/')
 				{
+					RECONSUME
 					SWITCH_TO(AfterAttributeName)
 				}
 				IF_ON('>')
 				{
+					RECONSUME
 					SWITCH_TO(AfterAttributeName)
 				}
 				IF_ON_EOF
 				{
+					RECONSUME
 					SWITCH_TO(AfterAttributeName)
 				}
 				IF_ON('=')
@@ -303,33 +315,39 @@ namespace XMLParser
 				{
 					m_current_token = {};
 					m_current_token.m_type = Token::Type::AttrName;
-					APPEND_CHAR_TO_TOKEN_DATA
+					RECONSUME
 					SWITCH_TO(AttributeName)
 				}
 			}
 			STATE(AttributeName)
 			{
 				CONSUME_CURRENT_CHAR
-				IF_ON_WHITESPACE
+					IF_ON_WHITESPACE
 				{
-					SWITCH_TO(BeforeAttributeName)
+					emit_current_token();
+
+					RECONSUME
+					SWITCH_TO(AfterAttributeName)
 				}
 				IF_ON('/')
 				{
+					RECONSUME
 					SWITCH_TO(AfterAttributeName)
 				}
 				IF_ON('>')
 				{
+					RECONSUME
 					SWITCH_TO(AfterAttributeName)
 				}
 				IF_ON_EOF
 				{
+					RECONSUME
 					SWITCH_TO(AfterAttributeName)
 				}
 				IF_ON('=')
 				{
 					emit_current_token();
-					SWITCH_TO(AfterAttributeName)
+					SWITCH_TO(BeforeAttributeValue)
 				}
 				// IF_UPPER_ASCII
 				// IF_NULL
@@ -338,6 +356,7 @@ namespace XMLParser
 					m_error_msg = "Unexpected character in attribute name.\n";
 					SWITCH_TO(Error)
 				}
+				// IF_ON('\'')
 				IF_ON('/')
 				{
 					m_error_msg = "Unexpected character in attribute name.\n";
@@ -365,8 +384,7 @@ namespace XMLParser
 				{
 					SWITCH_TO(SelfClosingStartTag)
 				}
-				// IF_ON('\'')
-				IF_ON('"')
+				IF_ON('=')
 				{
 					SWITCH_TO(BeforeAttributeValue)
 				}
@@ -381,10 +399,17 @@ namespace XMLParser
 				}
 				ANYTHING_ELSE
 				{
-					m_error_msg = "Attribute name must be followed by '='.\n";
-					SWITCH_TO(Error)
+					//m_error_msg = "Attribute name must be followed by '='.\n";
+					//SWITCH_TO(Error)
+					emit_current_token();
+
+					m_current_token = {};
+					m_current_token.m_type = Token::Type::AttrName;
+					RECONSUME
+					SWITCH_TO(AttributeName)
 				}
 			}
+			
 			STATE(BeforeAttributeValue) 
 			{
 				CONSUME_CURRENT_CHAR
@@ -392,18 +417,22 @@ namespace XMLParser
 				{
 					SWITCH_TO(BeforeAttributeValue)
 				}
-				IF_ON('>')
-				{
-					m_error_msg = "Tag closed without end-quote.\n";
-					SWITCH_TO(Error)
-				}
-				// more constraints for illegal chars
-				ANYTHING_ELSE
+				IF_ON('"')
 				{
 					m_current_token = {};
 					m_current_token.m_type = Token::Type::AttrVal;
-					APPEND_CHAR_TO_TOKEN_DATA
 					SWITCH_TO(AttributeValue)
+				}
+				// IF_ON('\'') switch to single-quote attr value
+				IF_ON('>')
+				{
+					m_error_msg = "Missing attribute value.\n";
+					SWITCH_TO(Error)
+				}
+				ANYTHING_ELSE
+				{
+					m_error_msg = "Missing opening quote for attribute value.\n";
+					SWITCH_TO(Error)
 				}
 			}
 			STATE(AttributeValue) 
@@ -439,6 +468,7 @@ namespace XMLParser
 				}
 				IF_ON('>')
 				{
+					//emit_current_token();
 					SWITCH_TO(Initial)
 				}
 				IF_ON_EOF
@@ -453,8 +483,6 @@ namespace XMLParser
 				}
 			}
 
-
-			
 			STATE(Error)
 			{
 				std::cout << "TOKENIZER::" << m_error_msg;

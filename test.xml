@@ -1,7 +1,7 @@
-<root attribute1="value1">
-	<child_of_root attribute2="value2">
-		<child_of_child_of_root attribute3="value3">
+<root a0="a0">
+	<child-0 a1 = "a1" >
+		<child-0-0 a2=" a2">
 			Some text!
-		</child_of_child_of_root>
-	</child_of_root>
+		</child-0-0>
+	</child-0>
 </root>
