@@ -1,7 +1,10 @@
 <root a0="a0">
-	<child-0 a1 = "a1" >
-		<child-0-0 a2=" a2">
+	<first a1 = "a1" >
+		<second a2=" a2">
 			Some text!
-		</child-0-0>
-	</child-0>
+			<third>
+				More text!
+			</third>
+		</second>
+	</first>
 </root>

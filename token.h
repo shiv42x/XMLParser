@@ -26,7 +26,7 @@ namespace XMLParser
 			SelfClosing,
 			AttrName,
 			AttrVal,
-			Character,
+			TextContent,
 			Whitespace,
 			/*
 			COMMENT,

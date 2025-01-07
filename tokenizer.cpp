@@ -56,7 +56,8 @@ namespace XMLParser
 	{
 		if (m_cursor + offset >= m_input.length())
 			return 0;
-		return m_input[m_cursor + offset];
+		// - 1 because m_cursor is 1 ahead of current
+		return m_input[m_cursor + offset - 1];
 	}
 
 	bool Tokenizer::next_few(const std::string& string) const
@@ -73,7 +74,7 @@ namespace XMLParser
 		return true;
 	}
 
-	bool Tokenizer::is_ascii_alpha(uint32_t codepoint) const
+	bool Tokenizer::is_ascii_alpha(std::optional<uint32_t> codepoint) const
 	{
 		return (codepoint >= 'A' && codepoint <= 'Z') || (codepoint >= 'a' && codepoint <= 'z');
 	}
@@ -87,7 +88,7 @@ namespace XMLParser
 		}
 	}
 
-	void Tokenizer::emit_current_token()
+	void Tokenizer::create_and_append_token()
 	{
 		switch (m_current_token.m_type)
 		{
@@ -116,9 +117,9 @@ namespace XMLParser
 			std::cout << "ATTR_VAL: ";
 		}
 		break;
-		case Token::Type::Character:
+		case Token::Type::TextContent:
 		{
-			std::cout << "CHAR: ";
+			std::cout << "TEXTCONTENT: ";
 		}
 		break;
 		case Token::Type::Whitespace:
@@ -129,7 +130,6 @@ namespace XMLParser
 		case Token::Type::EndOfFile:
 		{
 			std::cout << "EOF reached.\n";
-			return;
 		}
 		break;
 		default:
@@ -138,7 +138,8 @@ namespace XMLParser
 		}
 		}
 		std::cout << m_current_token.m_data << std::endl;
-		
+
+		m_tokens.push_back(m_current_token);
 		m_current_token = {};
 	}
 
@@ -146,13 +147,8 @@ namespace XMLParser
 	{
 		m_current_token.m_type = type;
 		m_tokens.push_back(m_current_token);
-		emit_current_token();
+		create_and_append_token();
 		m_current_token = {};
-	}
-
-	void Tokenizer::toggle_opening_quote()
-	{
-		b_opening_quote = !b_opening_quote;
 	}
 
 	void Tokenizer::run()
@@ -170,25 +166,37 @@ namespace XMLParser
 				//IF_NULL
 				IF_ON_EOF
 				{
-					m_current_token = {};
+					m_current_token.m_data = "EOF";
 					m_current_token.m_type = Token::Type::EndOfFile;
-					emit_current_token();
+					create_and_append_token();
 					return;
 				}
-				IF_ON_WHITESPACE // whitespace normalization?
+					IF_ON_WHITESPACE // whitespace normalization?
 				{
-					m_current_token = {};
 					m_current_token.m_type = Token::Type::Whitespace;
 					m_current_token.m_data += " ";
-					emit_current_token();
+					create_and_append_token();
 					SWITCH_TO(Initial)
 				}
-				ANYTHING_ELSE
+					ANYTHING_ELSE
 				{
-					m_current_token = {};
-					m_current_token.m_type = Token::Type::Character;
+					// accumulate all inner text content then create token
+					// 60 = '<'
+					while (peek(1).has_value() && peek(1).value() != 60)
+					{
+						// if on any whitespace except space, ignore
+						if (current_character.value() >= 9 && current_character.value() <= 13)
+						{
+							CONSUME_CURRENT_CHAR
+							continue;
+						}
+						APPEND_CHAR_TO_TOKEN_DATA
+						CONSUME_CURRENT_CHAR
+					}
+		
 					APPEND_CHAR_TO_TOKEN_DATA
-					emit_current_token();
+					m_current_token.m_type = Token::Type::TextContent;
+;					create_and_append_token();
 					SWITCH_TO(Initial)
 				}
 				return;
@@ -254,7 +262,7 @@ namespace XMLParser
 				CONSUME_CURRENT_CHAR
 				IF_ON_WHITESPACE
 				{
-					emit_current_token();
+					create_and_append_token();
 					SWITCH_TO(BeforeAttributeName)
 				}
 				IF_ON('/')
@@ -263,7 +271,7 @@ namespace XMLParser
 				}
 				IF_ON('>')
 				{
-					emit_current_token();
+					create_and_append_token();
 					SWITCH_TO(Initial)
 				}
 				// IF_ASCII_UPPER_ALPHA
@@ -283,7 +291,6 @@ namespace XMLParser
 			{
 
 			}
-			
 			STATE(BeforeAttributeName)
 			{
 				CONSUME_CURRENT_CHAR
@@ -322,9 +329,9 @@ namespace XMLParser
 			STATE(AttributeName)
 			{
 				CONSUME_CURRENT_CHAR
-					IF_ON_WHITESPACE
+				IF_ON_WHITESPACE
 				{
-					emit_current_token();
+					create_and_append_token();
 
 					RECONSUME
 					SWITCH_TO(AfterAttributeName)
@@ -346,7 +353,7 @@ namespace XMLParser
 				}
 				IF_ON('=')
 				{
-					emit_current_token();
+					create_and_append_token();
 					SWITCH_TO(BeforeAttributeValue)
 				}
 				// IF_UPPER_ASCII
@@ -401,7 +408,7 @@ namespace XMLParser
 				{
 					//m_error_msg = "Attribute name must be followed by '='.\n";
 					//SWITCH_TO(Error)
-					emit_current_token();
+					create_and_append_token();
 
 					m_current_token = {};
 					m_current_token.m_type = Token::Type::AttrName;
@@ -409,7 +416,6 @@ namespace XMLParser
 					SWITCH_TO(AttributeName)
 				}
 			}
-			
 			STATE(BeforeAttributeValue) 
 			{
 				CONSUME_CURRENT_CHAR
@@ -440,7 +446,7 @@ namespace XMLParser
 				CONSUME_CURRENT_CHAR
 				IF_ON('"')
 				{
-					emit_current_token();
+					create_and_append_token();
 					SWITCH_TO(AfterAttributeValue)
 				}
 				// IF_NULL
@@ -482,7 +488,6 @@ namespace XMLParser
 					SWITCH_TO(Error)
 				}
 			}
-
 			STATE(Error)
 			{
 				std::cout << "TOKENIZER::" << m_error_msg;
