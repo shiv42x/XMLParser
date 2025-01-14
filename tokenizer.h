@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
-#include <set>
 #include "token.h"
 
 namespace XMLParser
@@ -15,6 +14,7 @@ namespace XMLParser
 			: m_input(content)
 		{}
 		void run();
+		std::vector<Token> m_tokens;
 
 	private:
 		enum class State
@@ -38,11 +38,10 @@ namespace XMLParser
 
 		// input and tracking
 		size_t m_cursor{ 0 };
-		std::string m_input;
+		const std::string& m_input;
 		std::string m_error_msg;
 
 		// tokens
-		std::vector<Token> m_tokens;
 		Token m_current_token;
 
 		std::optional<uint32_t> next();
@@ -53,6 +52,5 @@ namespace XMLParser
 
 		// bool is_cursor_on(uint32_t codepoint) const;
 		void create_and_append_token();
-		void create_token(Token::Type type);
 	};
 }

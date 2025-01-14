@@ -8,13 +8,13 @@
 	if (current_character.has_value() && isspace((char)current_character.value()))
 
 #define IF_ON_ASCII_ALPHA	\
-    if (current_character.has_value() && is_ascii_alpha((char)current_character.value()))
+	if (current_character.has_value() && is_ascii_alpha((char)current_character.value()))
 
 #define IF_ON_EOF	\
 	if (!current_character.has_value())
 
 #define ANYTHING_ELSE	\
- 	if (1)
+	if (1)
 
 #define STATE(state)	\
 	state:				\
@@ -42,6 +42,8 @@
 
 #define LOG(x)									\
 	std::cout << (char)x.value() << std::endl;	
+
+//#define DEBUG
 
 namespace XMLParser
 {
@@ -90,6 +92,7 @@ namespace XMLParser
 
 	void Tokenizer::create_and_append_token()
 	{
+#ifdef DEBUG
 		switch (m_current_token.m_type)
 		{
 		case Token::Type::StartTag:
@@ -138,16 +141,9 @@ namespace XMLParser
 		}
 		}
 		std::cout << m_current_token.m_data << std::endl;
+#endif
 
 		m_tokens.push_back(m_current_token);
-		m_current_token = {};
-	}
-
-	void Tokenizer::create_token(Token::Type type)
-	{
-		m_current_token.m_type = type;
-		m_tokens.push_back(m_current_token);
-		create_and_append_token();
 		m_current_token = {};
 	}
 
