@@ -5,7 +5,7 @@
 
 namespace XMLParser
 {
-	void XMLDocument::parse()
+	void XMLDocument::tokenize_and_parse()
 	{
 		std::ifstream f(m_path);
 
@@ -24,10 +24,11 @@ namespace XMLParser
 			return;
 		}
 
-		Tokenizer tok(file_contents);
-		tok.run();
-
-		std::cout << "Found " << tok.m_tokens.size() << " tokens!" << std::endl;
+		Tokenizer tokenizer(file_contents);
+		tokenizer.run();
+		std::cout << tokenizer.m_tokens.size() << " tokens found.\n";
+		
+		Parser parser;
+		parser.run(tokenizer.m_tokens);
 	}
-
 }

@@ -486,7 +486,7 @@ namespace XMLParser
 			}
 			STATE(Error)
 			{
-				std::cout << "TOKENIZER::" << m_error_msg;
+				std::cout << "TOKENIZER::ERROR::" << m_error_msg;
 				return;
 			}
 		}

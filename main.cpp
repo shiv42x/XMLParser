@@ -7,7 +7,7 @@
 int main()
 {
 	XMLParser::XMLDocument doc("test.xml");
-	doc.parse();
 	
+
 	return 0;
 }

@@ -9,12 +9,12 @@ namespace XMLParser
 {
 	class Tokenizer
 	{
+		friend class XMLDocument;
 	public:
 		Tokenizer(const std::string& content)
 			: m_input(content)
 		{}
 		void run();
-		std::vector<Token> m_tokens;
 
 	private:
 		enum class State
@@ -43,6 +43,7 @@ namespace XMLParser
 
 		// tokens
 		Token m_current_token;
+		std::vector<Token> m_tokens;
 
 		std::optional<uint32_t> next();
 		std::optional<uint32_t> peek(size_t offset) const;
