@@ -1,5 +1,5 @@
 <root root="root">
-	<child-0 c0="c0">
+	<child-0 c-0="c-0">
 		<child-0-0 c0-0="c-0-0">
 			0-0's text!
 			<child-0-0-0 c-0-0-0="c-0-0-0" extra="extra">
@@ -8,7 +8,7 @@
 		</child-0-0>
 	</child-0>
 	
-	<child-1 c1="c1">
+	<child-1 c-1="c-1">
 		<child-1-0 c-1-0="c-1-0">
 			1-0's text!
 		</child-1-0>
