@@ -2,7 +2,7 @@
 	<child-0 c-0="c-0">
 		<child-0-0 c0-0="c-0-0">
 			0-0's text!
-			<child-0-0-0 c-0-0-0="c-0-0-0" extra="extra">
+			<child-0-0-0 c-0-0-0="c-0-0-0" bla="bla">
 				0-0-0's text!
 			</child-0-0-0>
 		</child-0-0>
