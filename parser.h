@@ -37,6 +37,21 @@ namespace XMLParser
 		{
 			m_children.push_back(child);
 		}
+
+		bool has_children()
+		{
+			return (m_children.size() > 0);
+		}
+
+		bool has_attibutes()
+		{
+			return (m_attributes.size() > 0);
+		}
+
+		bool has_innertext()
+		{
+			return (m_inner_text.size() > 0);
+		}
 	};
 	
 	class Parser

@@ -301,8 +301,9 @@ namespace XMLParser
 				}
 				IF_ON('>')
 				{
-					RECONSUME
-					SWITCH_TO(AfterAttributeName)
+					//RECONSUME
+					//SWITCH_TO(AfterAttributeName)
+					SWITCH_TO(Initial)
 				}
 				IF_ON_EOF
 				{
@@ -393,7 +394,9 @@ namespace XMLParser
 				}
 				IF_ON('>')
 				{
-					SWITCH_TO(Initial)
+					//SWITCH_TO(Initial)
+					m_error_msg = "Missing attribute value.\n";
+					SWITCH_TO(Error)
 				}
 				IF_ON_EOF
 				{
@@ -402,8 +405,6 @@ namespace XMLParser
 				}
 				ANYTHING_ELSE
 				{
-					//m_error_msg = "Attribute name must be followed by '='.\n";
-					//SWITCH_TO(Error)
 					create_and_append_token();
 
 					m_current_token = {};

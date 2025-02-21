@@ -14,6 +14,7 @@ namespace XMLParser
 		Tokenizer(const std::string& content)
 			: m_input(content)
 		{}
+		
 		void run();
 
 	private:

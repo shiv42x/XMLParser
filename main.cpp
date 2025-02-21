@@ -7,7 +7,7 @@
 int main()
 {
 	XMLParser::XMLDocument doc("test.xml");
-	
+	doc.depth_first();
 
 	return 0;
 }

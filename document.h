@@ -10,16 +10,20 @@ namespace XMLParser
 {
 	class XMLDocument
 	{
-	public:
+	public:	
 		XMLDocument(const std::string& path)
 			: m_path(path)
 		{
-			tokenize_and_parse();
+			attempt_tokenize_and_parse();
 		}
+
+		std::shared_ptr<XMLParser::Node> m_root;
+
+		void depth_first() const;
 
 	private:
 		const std::string m_path;
 
-		void tokenize_and_parse();
+		void attempt_tokenize_and_parse();
 	};
 }

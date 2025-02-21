@@ -2,49 +2,40 @@
 
 namespace XMLParser
 {
-	void Parser::run(std::vector<Token>& tokens)
+	void XMLParser::Parser::run(std::vector<Token>& tokens)
 	{
 		for (const auto& token : tokens)
 		{
 			switch (token.type())
 			{
 			case Token::Type::StartTag:
-				std::cout << "StartTag\n";
 				handle_start_tag(token);
 				break;
 			case Token::Type::EndTag:
-				std::cout << "EndTag\n";
 				handle_end_tag(token);
 				break;
 			case Token::Type::SelfClosing:
-				std::cout << "SelfClosing\n";
 				handle_self_closing(token);
 				break;
 			case Token::Type::AttrName:
-				std::cout << "AttrName\n";
 				handle_attr_name(token);
 				break;
 			case Token::Type::AttrVal:
-				std::cout << "AttrVal\n";
 				handle_attr_val(token);
 				break;
 			case Token::Type::TextContent:
-				std::cout << "TextContent\n";
 				handle_text_content(token);
 				break;
 			case Token::Type::Whitespace:
-				std::cout << "Whitespace\n";
 				handle_whitespace(token);
 				break;
 			case Token::Type::EndOfFile:
-				std::cout << "EndOfFile\n";
 				handle_eof(token);
 				break;
 			default:
 				break;
 			}
 		}
-		std::cout << m_root->m_tag_name << std::endl;
 	}
 	void Parser::handle_start_tag(const Token& token)
 	{
